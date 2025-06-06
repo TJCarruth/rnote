@@ -242,6 +242,7 @@ impl Engine {
     fn draw_background_to_gtk_snapshot(&self, snapshot: &gtk4::Snapshot) -> anyhow::Result<()> {
         use crate::ext::{GdkRGBAExt, GrapheneRectExt};
         use gtk4::{gdk, graphene, gsk, prelude::*};
+        use crate::document::background::BackgroundKind;
 
         let doc_bounds = self.document.bounds();
 
@@ -251,14 +252,39 @@ impl Engine {
         snapshot.append_node(
             gsk::ColorNode::new(
                 &gdk::RGBA::from_compose_color(self.document.config.background.color),
-                //&gdk::RGBA::RED,
                 &graphene::Rect::from_p2d_aabb(doc_bounds),
             )
             .upcast(),
         );
 
-        for r in self.background_rendernodes.iter() {
-            snapshot.append_node(r);
+        // --- PDF Template Background Support ---
+        match &self.document.config.background.kind {
+            BackgroundKind::PdfTemplate { pdf_bytes, page_index } => {
+                // Render the PDF page as the background.
+                // This is a simplified example: you should cache the rasterized image for performance.
+                if let Ok(bitmap_image) = crate::render::BitmapImage::from_pdf_bytes(
+                    pdf_bytes,
+                    // Use your PDF import preferences or defaults here:
+                    self.config.read().import_prefs.pdf_import_prefs,
+                    na::Vector2::new(doc_bounds.mins[0], doc_bounds.mins[1]),
+                    Some(*page_index..(*page_index + 1)),
+                    &self.document.config.format,
+                    None,
+                ) {
+                    // Convert BitmapImage to a GTK texture and draw it
+                    if let Ok(texture) = bitmap_image.to_memtexture() {
+                        let rect = graphene::Rect::from_p2d_aabb(doc_bounds);
+                        let node = gsk::TextureNode::new(&texture, &rect).upcast();
+                        snapshot.append_node(node);
+                    }
+                }
+            }
+            _ => {
+                // Draw normal pattern background
+                for r in self.background_rendernodes.iter() {
+                    snapshot.append_node(r);
+                }
+            }
         }
 
         snapshot.pop();

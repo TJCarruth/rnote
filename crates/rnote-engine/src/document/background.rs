@@ -331,9 +331,28 @@ fn gen_iso_dots_pattern(
     group.into()
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BackgroundKind {
+    ColorPattern, // The default: color + pattern
+    PdfTemplate {
+        pdf_bytes: Vec<u8>,
+        page_index: u32,
+    },
+}
+
+impl Default for BackgroundKind {
+    fn default() -> Self {
+        Self::ColorPattern
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename = "background")]
 pub struct Background {
+    #[serde(flatten)]
+    pub kind: BackgroundKind,
+
     #[serde(rename = "color")]
     pub color: Color,
     #[serde(rename = "pattern")]
@@ -350,6 +369,7 @@ pub struct Background {
 impl Default for Background {
     fn default() -> Self {
         Self {
+            kind: BackgroundKind::default(),
             color: Self::COLOR_DEFAULT,
             pattern: PatternStyle::default(),
             pattern_size: Self::PATTERN_SIZE_DEFAULT,

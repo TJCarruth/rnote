@@ -1,6 +1,7 @@
 // Imports
 use super::StrokeContent;
 use crate::document::Layout;
+use crate::document::background::{Background, BackgroundKind}; // <-- Add this import
 use crate::engine_view_mut;
 use crate::pens::Pen;
 use crate::pens::PenStyle;
@@ -405,5 +406,24 @@ impl Engine {
         widget_flags.redraw = true;
 
         widget_flags
+    }
+
+    /// Import a PDF and optionally set it as the background template.
+    pub fn import_pdf_and_optionally_set_background(
+        &mut self,
+        pdf_bytes: Vec<u8>,
+        page_index: u32,
+        set_as_background: bool,
+    ) {
+        if set_as_background {
+            self.document.config.background = Background {
+                kind: BackgroundKind::PdfTemplate {
+                    pdf_bytes,
+                    page_index,
+                },
+                ..Background::default()
+            };
+        }
+        // Otherwise, do your normal import logic (e.g., insert as strokes)
     }
 }

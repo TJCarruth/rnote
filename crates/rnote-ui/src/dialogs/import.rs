@@ -599,6 +599,20 @@ pub(crate) async fn dialog_import_xopp_w_prefs(
         }));
     }));
 
+        
+    // sets the background as the imported PDF
+    let set_as_background = builder
+        .object::<adw::SwitchRow>("pdf_import_set_as_background_row")
+        .map(|row| row.is_active())
+        .unwrap_or(false);
+    
+    // When calling the engine import, pass this flag:
+    engine.import_pdf_and_optionally_set_background(
+        pdf_bytes,
+        selected_page_index,
+        set_as_background,
+    );
+
     // Send a cancel response when the dialog is closed
     dialog.connect_closed(clone!(
         #[weak]

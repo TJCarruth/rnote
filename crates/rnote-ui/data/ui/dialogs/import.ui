@@ -170,6 +170,12 @@ to the actual size on the document</property>
                         <property name="subtitle" translatable="yes">Whether the pages have drawn borders</property>
                       </object>
                     </child>
+                    <child>
+                      <object class="AdwSwitchRow" id="pdf_import_set_as_background_row">
+                        <property name="title" translatable="yes">Set as Page Background</property>
+                        <property name="subtitle" translatable="yes">Use the imported PDF as the background template for new pages</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
